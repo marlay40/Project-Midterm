@@ -286,7 +286,7 @@ class Modulus(Operation):
         self.validate_operands(a, b)
         return a % b
 
-class IntegerDivision(Operation):
+class IntDivide(Operation):
     """
     Interger division operation implementation.
 
@@ -324,7 +324,7 @@ class IntegerDivision(Operation):
         self.validate_operands(a, b)
         return a // b
 
-class Percentage(Operation):
+class Percent(Operation):
     """
     Percentage operation implementation.
 
@@ -362,7 +362,7 @@ class Percentage(Operation):
         self.validate_operands(a, b)
         return (a / b) * 100
 
-class AbsoluteDifference(Operation):
+class AbsDifference(Operation):
     """
     Absolute difference operation implementation.
 
@@ -401,9 +401,9 @@ class OperationFactory:
         'power': Power,
         'root': Root,
         'modulus': Modulus,
-        'int_divide': IntegerDivision,
-        'percent': Percentage,
-        'abs_diff': AbsoluteDifference
+        'int_divide': IntDivide,
+        'percent': Percent,
+        'abs_diff': AbsDifference
     }
 
     @classmethod
