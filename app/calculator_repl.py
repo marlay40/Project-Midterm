@@ -9,7 +9,9 @@ from app.calculator import Calculator
 from app.exceptions import OperationError, ValidationError
 from app.history import AutoSaveObserver, LoggingObserver
 from app.operations import OperationFactory
+from colorama import init, Fore, Back, Style
 
+init(autoreset=True)
 
 def calculator_repl():
     """
@@ -26,43 +28,42 @@ def calculator_repl():
         calc.add_observer(LoggingObserver())
         calc.add_observer(AutoSaveObserver(calc))
 
-        print("Calculator started. Type 'help' for commands.")
+        print(Fore.MAGENTA + "Calculator started. Type 'help' for commands.")
 
         while True:
             try:
                 # Prompt the user for a command
-                command = input("\nEnter command: ").lower().strip()
+                command = input(Fore.BLUE + "\nEnter command: ").lower().strip()
 
                 if command == 'help':
                     # Display available commands
-                    print("\nAvailable commands:")
-                    print("  add, subtract, multiply, divide, power, root, modulus, int_divide, percent, abs_diff - Perform calculations")
-                    print("  history - Show calculation history")
-                    print("  clear - Clear calculation history")
-                    print("  undo - Undo the last calculation")
-                    print("  redo - Redo the last undone calculation")
-                    print("  save - Save calculation history to file")
-                    print("  load - Load calculation history from file")
-                    print("  exit - Exit the calculator")
+                    print(Fore.YELLOW + "\nAvailable commands:")
+                    print(Fore.RED + "  add, subtract, multiply, divide, power, root, modulus, int_divide, percent, abs_diff - Perform calculations")
+                    print(Fore.RED + "  clear - Clear calculation history")
+                    print(Fore.RED + "  undo - Undo the last calculation")
+                    print(Fore.GREEN + "  redo - Redo the last undone calculation")
+                    print(Fore.GREEN + "  save - Save calculation history to file")
+                    print(Fore.GREEN + "  load - Load calculation history from file")
+                    print(Fore.BLUE + "  exit - Exit the calculator")
                     continue
 
                 if command == 'exit':
                     # Attempt to save history before exiting
                     try:
                         calc.save_history()
-                        print("History saved successfully.")
+                        print(Fore.MAGENTA + "History saved successfully.")
                     except Exception as e:  # pragma: no cover
                         print(f"Warning: Could not save history: {e}") 
-                    print("Goodbye!")
+                    print(Fore.LIGHTBLUE_EX + "Goodbye!")
                     break
 
                 if command == 'history':
                     # Display calculation history
                     history = calc.show_history()
                     if not history:
-                        print("No calculations in history")
+                        print(Fore.MAGENTA + "No calculations in history")
                     else:
-                        print("\nCalculation History:")
+                        print(Fore.LIGHTBLUE_EX + "\nCalculation History:")
                         for i, entry in enumerate(history, 1):
                             print(f"{i}. {entry}")
                     continue
@@ -70,7 +71,7 @@ def calculator_repl():
                 if command == 'clear':
                     # Clear calculation history
                     calc.clear_history()
-                    print("History cleared")
+                    print(Fore.LIGHTRED_EX + "History cleared")
                     continue
 
                 if command == 'undo':
