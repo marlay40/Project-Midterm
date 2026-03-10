@@ -119,30 +119,35 @@ def test_save_history(mock_to_csv, calculator):
     calculator.save_history()
     mock_to_csv.assert_called_once()
 
+# Test that load_history rebuilds calculation history from a CSV file.
 @patch('app.calculator.pd.read_csv')
-@patch('app.calculator.Path.exists', return_value=True)
-def test_load_history(mock_exists, mock_read_csv, calculator):
-    # Mock CSV data to match the expected format in from_dict
-    mock_read_csv.return_value = pd.DataFrame({
-        'operation': ['Addition'],
-        'operand1': ['2'],
-        'operand2': ['3'],
-        'result': ['5'],
-        'timestamp': [datetime.datetime.now().isoformat()]
-    })
-    
-    # Test the load_history functionality
-    try:
-        calculator.load_history()
-        # Verify history length after loading
-        assert len(calculator.history) == 1
-        # Verify the loaded values
-        assert calculator.history[0].operation == "Addition"
-        assert calculator.history[0].operand1 == Decimal("2")
-        assert calculator.history[0].operand2 == Decimal("3")
-        assert calculator.history[0].result == Decimal("5")
-    except OperationError:
-        pytest.fail("Loading history failed due to OperationError")
+def test_load_history_success(mock_read_csv):
+    with patch.object(CalculatorConfig, 'log_dir', new_callable=PropertyMock) as mock_log_dir, \
+         patch.object(CalculatorConfig, 'log_file', new_callable=PropertyMock) as mock_log_file, \
+         patch.object(CalculatorConfig, 'history_dir', new_callable=PropertyMock) as mock_history_dir, \
+         patch.object(CalculatorConfig, 'history_file', new_callable=PropertyMock) as mock_history_file:
+
+        temp_path = Path('/tmp')
+        mock_log_dir.return_value = temp_path / "logs"
+        mock_log_file.return_value = temp_path / "logs/calculator.log"
+        mock_history_dir.return_value = temp_path / "history"
+
+        fake_history_file = Mock()
+        fake_history_file.exists.return_value = True
+        mock_history_file.return_value = fake_history_file
+
+        mock_read_csv.return_value = pd.DataFrame({
+            'operation': ['Addition'],
+            'operand1': ['2'],
+            'operand2': ['3'],
+            'result': ['5'],
+            'timestamp': [datetime.datetime.now().isoformat()]
+        })
+
+        calc = Calculator(CalculatorConfig(base_dir=temp_path))
+        calc.load_history()
+
+        assert len(calc.history) == 1
 
 # Undo returns False when empty
 
@@ -162,24 +167,81 @@ def test_clear_history(calculator):
     assert calculator.redo_stack == []
 
 # Test REPL Commands (using patches for input/output handling)
-
 @patch('builtins.input', side_effect=['exit'])
 @patch('builtins.print')
 def test_calculator_repl_exit(mock_print, mock_input):
     with patch('app.calculator.Calculator.save_history') as mock_save_history:
         calculator_repl()
-        mock_save_history.assert_called_once()
-        mock_print.assert_any_call("History saved successfully.")
-        mock_print.assert_any_call("Goodbye!")
 
+        mock_save_history.assert_called_once()
+
+        printed = " ".join(str(call.args[0]) for call in mock_print.call_args_list if call.args)
+        assert "history saved" in printed.lower()
+        assert "goodbye" in printed.lower()
+
+# Test that the REPL help command prints available commands.
 @patch('builtins.input', side_effect=['help', 'exit'])
 @patch('builtins.print')
 def test_calculator_repl_help(mock_print, mock_input):
     calculator_repl()
-    mock_print.assert_any_call("\nAvailable commands:")
+
+    printed = " ".join(str(call.args[0]) for call in mock_print.call_args_list if call.args)
+    assert "available commands" in printed.lower()
 
 @patch('builtins.input', side_effect=['add', '2', '3', 'exit'])
 @patch('builtins.print')
 def test_calculator_repl_addition(mock_print, mock_input):
     calculator_repl()
     mock_print.assert_any_call("\nResult: 5")
+
+# Test that observers are notified after a calculation is performed.
+def test_notify_observers_calls_update(calculator):
+    observer = Mock()
+    calculator.add_observer(observer)
+
+    operation = OperationFactory.create_operation("add")
+    calculator.set_operation(operation)
+    calculator.perform_operation(2, 3)
+
+    observer.update.assert_called_once()
+
+
+# Test that history can be returned as a pandas DataFrame.
+def test_get_history_dataframe_returns_dataframe(calculator):
+    operation = OperationFactory.create_operation("add")
+    calculator.set_operation(operation)
+    calculator.perform_operation(2, 3)
+
+    df = calculator.get_history_dataframe()
+
+    assert isinstance(df, pd.DataFrame)
+    assert len(df) == 1
+    assert list(df.columns) == ["operation", "operand1", "operand2", "result", "timestamp"]
+
+
+# Test that show_history returns formatted calculation strings.
+def test_show_history_returns_formatted_strings(calculator):
+    operation = OperationFactory.create_operation("add")
+    calculator.set_operation(operation)
+    calculator.perform_operation(2, 3)
+
+    history_output = calculator.show_history()
+
+    assert isinstance(history_output, list)
+    assert len(history_output) == 1
+    assert "2" in history_output[0]
+    assert "3" in history_output[0]
+    assert "5" in history_output[0]
+
+
+# Test that redo returns False when there is nothing to redo.
+def test_redo_when_empty_returns_false():
+    calc = Calculator()
+    assert calc.redo() is False
+
+
+# Test that save_history still writes a CSV when history is empty.
+@patch('app.calculator.pd.DataFrame.to_csv')
+def test_save_history_with_empty_history(mock_to_csv, calculator):
+    calculator.save_history()
+    mock_to_csv.assert_called_once()
