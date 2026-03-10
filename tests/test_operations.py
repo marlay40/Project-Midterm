@@ -266,8 +266,8 @@ class TestAbsDifference(BaseOperationTest):
             "b": "1e9",
             "expected": "9000000000"
         },
-    invalid_test_cases = {}  # Absolute Difference has no invalid cases
     }
+    invalid_test_cases = {}  # Absolute Difference has no invalid cases
 
 
 class TestOperationFactory:
