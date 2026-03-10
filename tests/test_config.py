@@ -144,3 +144,33 @@ def test_history_file_property():
     config = CalculatorConfig(base_dir=Path('/new_base_dir'))
     assert config.history_file == Path('/new_base_dir/history/calculator_history.csv').resolve()
 
+def test_log_dir_property():
+    config = CalculatorConfig(base_dir=Path("/tmp"))
+    assert config.log_dir == Path("/tmp/logs").resolve()
+
+def test_history_dir_property():
+    config = CalculatorConfig(base_dir=Path("/tmp"))
+    assert config.history_dir == Path("/tmp/history").resolve()
+
+def test_history_file_property():
+    config = CalculatorConfig(base_dir=Path("/tmp"))
+    assert config.history_file == Path("/tmp/history/calculator_history.csv").resolve()
+
+def test_log_file_property():
+    config = CalculatorConfig(base_dir=Path("/tmp"))
+    assert config.log_file == Path("/tmp/logs/calculator.log").resolve()
+
+def test_validate_raises_for_negative_max_history_size():
+    config = CalculatorConfig(max_history_size=-1)
+    with pytest.raises(ConfigurationError, match="max_history_size must be positive"):
+        config.validate()
+
+def test_validate_raises_for_negative_precision():
+    config = CalculatorConfig(precision=-1)
+    with pytest.raises(ConfigurationError, match="precision must be positive"):
+        config.validate()
+
+def test_validate_raises_for_zero_max_input_value():
+    config = CalculatorConfig(max_input_value=Decimal("0"))
+    with pytest.raises(ConfigurationError, match="max_input_value must be positive"):
+        config.validate()
