@@ -1,3 +1,9 @@
+- Started this project by copying the calculator repository from Assignment 5 and extending it for the midterm project.
+- Added additional calculator operations including Modulus, Integer Division, Percentage, and Absolute Difference.
+- Added additional tests to verify calculator functionality.
+- Integrated Colorama to add colored output and make the command-line calculator more user-friendly.
+- Verified calculator performance using pytest and increased project test coverage to over 90%.
+
 # 📦 Project Setup
 
 ---
